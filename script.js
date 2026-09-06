@@ -1,4 +1,4 @@
-const LEAD_ENDPOINT = 'https://script.google.com/macros/s/AKfycbzqwNmptNZtSGaJ7_G95Qf8cHIyWAj5MSBOKTaYzlhSf0CDCXcvzj2iQsGOJU7TFNTl/exec';
+const LEAD_ENDPOINT = '/api/lead';
 
 document.getElementById('menuBtn')?.addEventListener('click',()=>document.getElementById('mainNav').classList.toggle('open'));
 
@@ -52,13 +52,16 @@ document.getElementById('leadForm')?.addEventListener('submit', async (e)=>{
   msg.textContent = '';
 
   try {
-    await fetch(LEAD_ENDPOINT, {
+    const response = await fetch(LEAD_ENDPOINT, {
       method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify(payload),
-      keepalive: true
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
     });
+
+    const data = await response.json().catch(()=>({ ok:false }));
+    if(!response.ok || data.ok === false){
+      throw new Error(data.error || 'submit_failed');
+    }
 
     msg.textContent='Đã ghi nhận thông tin. Đội ngũ Mao Trung Home sẽ liên hệ tư vấn.';
     form.reset();
