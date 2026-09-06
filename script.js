@@ -1,0 +1,3 @@
+document.getElementById('menuBtn')?.addEventListener('click',()=>document.getElementById('mainNav').classList.toggle('open'));
+document.querySelectorAll('.faq-q').forEach(btn=>btn.addEventListener('click',()=>{const a=btn.nextElementSibling;a.classList.toggle('open');btn.querySelector('span').textContent=a.classList.contains('open')?'−':'+';}));
+document.getElementById('leadForm')?.addEventListener('submit',e=>{e.preventDefault();const f=new FormData(e.currentTarget);const phone=(f.get('phone')||'').toString().trim();const msg=document.getElementById('formMsg');if(phone.length<9){msg.textContent='Vui lòng kiểm tra lại số điện thoại.';return;}msg.textContent='Đã ghi nhận thông tin. Đội ngũ Mao Trung Home sẽ liên hệ tư vấn.';e.currentTarget.reset();});
