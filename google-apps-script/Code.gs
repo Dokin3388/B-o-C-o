@@ -3,11 +3,11 @@ const SHEET_NAME = 'Leads';
 
 function doPost(e) {
   try {
-    const payload = JSON.parse(e.postData.contents || '{}');
+    const payload = parsePayload_(e);
     const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(SHEET_NAME);
     if (!sheet) throw new Error('Sheet not found');
 
-    const phone = String(payload.phone || '').trim();
+    const phone = String(payload.phone || '').replace(/[^0-9+]/g, '').trim();
     if (!phone || phone.length < 9) {
       return json_({ ok: false, error: 'invalid_phone' });
     }
@@ -35,6 +35,25 @@ function doPost(e) {
     return json_({ ok: true, lead_id: leadId });
   } catch (err) {
     return json_({ ok: false, error: String(err && err.message ? err.message : err) });
+  }
+}
+
+function parsePayload_(e) {
+  if (e && e.parameter && Object.keys(e.parameter).length) {
+    return e.parameter;
+  }
+  const raw = e && e.postData && e.postData.contents ? e.postData.contents : '{}';
+  try {
+    return JSON.parse(raw);
+  } catch (_) {
+    const out = {};
+    raw.split('&').forEach(pair => {
+      const idx = pair.indexOf('=');
+      const key = decodeURIComponent(idx >= 0 ? pair.slice(0, idx) : pair).replace(/\+/g, ' ');
+      const val = decodeURIComponent(idx >= 0 ? pair.slice(idx + 1) : '').replace(/\+/g, ' ');
+      if (key) out[key] = val;
+    });
+    return out;
   }
 }
 
