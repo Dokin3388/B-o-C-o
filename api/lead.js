@@ -14,10 +14,15 @@ export default async function handler(req, res) {
       return res.status(400).json({ ok: false, error: 'invalid_phone' });
     }
 
+    const form = new URLSearchParams();
+    Object.entries({ ...payload, phone }).forEach(([key, value]) => {
+      form.set(key, value == null ? '' : String(value));
+    });
+
     const upstream = await fetch(GOOGLE_SCRIPT_ENDPOINT, {
       method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ ...payload, phone }),
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+      body: form.toString(),
       redirect: 'follow'
     });
 
@@ -26,7 +31,7 @@ export default async function handler(req, res) {
     try {
       data = JSON.parse(text);
     } catch {
-      data = { ok: upstream.ok, raw: text.slice(0, 500) };
+      data = { ok: false, error: 'invalid_upstream_response', raw: text.slice(0, 300) };
     }
 
     if (!upstream.ok || data?.ok === false) {
@@ -34,7 +39,7 @@ export default async function handler(req, res) {
       return res.status(502).json({ ok: false, error: data?.error || 'sheet_write_failed' });
     }
 
-    return res.status(200).json(data?.ok ? data : { ok: true });
+    return res.status(200).json(data);
   } catch (err) {
     console.error('Lead API error', err);
     return res.status(500).json({ ok: false, error: 'lead_api_error' });
